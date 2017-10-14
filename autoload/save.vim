@@ -7,7 +7,7 @@ let g:autoloaded_save = 1
 fu! save#buffer() "{{{2
     if !&l:mod | return '' | endif
 
-    let [ save_x, save_y ] = [ getpos("'x"), getpos("'y") ]
+    let [ x_save, y_save ] = [ getpos("'x"), getpos("'y") ]
     let view = winsaveview()
     try
         try
@@ -27,8 +27,8 @@ fu! save#buffer() "{{{2
         endtry
 
     finally
-        call setpos("'x", save_x)
-        call setpos("'y", save_y)
+        call setpos("'x", x_save)
+        call setpos("'y", y_save)
         call winrestview(view)
     endtry
 
