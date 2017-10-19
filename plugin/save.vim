@@ -18,7 +18,46 @@ set autoread
 "         :set autoread<
 
 " Functions {{{1
-fu! save#toggle_auto(enable) abort "{{{2
+fu! s:buffer() "{{{2
+    if !&l:mod | return '' | endif
+
+    let [ x_save, y_save ] = [ getpos("'x"), getpos("'y") ]
+    let view = winsaveview()
+    try
+        try
+            norm! `[mx`]my
+        catch
+        endtry
+
+        try
+            sil update
+        catch
+            return 'echoerr '.string(v:exception)
+        endtry
+
+        try
+            norm! `xm[`ym]
+        catch
+        endtry
+
+    finally
+        call setpos("'x", x_save)
+        call setpos("'y", y_save)
+        call winrestview(view)
+    endtry
+
+    return ''
+endfu
+
+" When we save a buffer, the marks ]  and [ do not match the last changed/yanked
+" text but the whole buffer. We want to preserve these marks.
+"
+" So, we:
+"
+"         • `[mx`]my    temporarily duplicate the marks (using marks x and y)
+"         • update      save the buffer if needed
+"         • `xm[`ym]    restore the marks
+fu! s:toggle_auto(enable) abort "{{{2
     if a:enable
         augroup auto_save_and_read
             au!
@@ -32,11 +71,11 @@ fu! save#toggle_auto(enable) abort "{{{2
             au CursorHold * sil! checktime
 
             " Also, save current buffer it if it has been modified.
-            "
+           "
             "                                 ┌─ necessary to trigger autocmd sourcing vimrc
             "                                 │
             au BufLeave,CursorHold,WinLeave * nested if empty(&buftype)
-                                                  \|     sil! exe save#buffer()
+                                                  \|     sil! exe s:buffer()
                                                   \| endif
             echo '[auto save] ON'
         augroup END
@@ -48,7 +87,7 @@ fu! save#toggle_auto(enable) abort "{{{2
     return ''
 endfu
 
-sil call save#toggle_auto(1)
+sil call s:toggle_auto(1)
 
 " NOTE:
 " The 2 autocmds which have just been installed cause an issue.
@@ -72,7 +111,7 @@ sil call save#toggle_auto(1)
 
 " Mappings {{{1
 
-nno <silent> <c-s>  :<c-u>exe save#buffer()<cr>
-nno <silent> [oa    :<c-u>exe save#toggle_auto(0)<cr>
-nno <silent> ]oa    :<c-u>exe save#toggle_auto(1)<cr>
-nno <silent> coa    :<c-u>exe save#toggle_auto(!exists('#auto_save_and_read'))<cr>
+nno <silent> <c-s>  :<c-u>exe <sid>buffer()<cr>
+nno <silent> [oa    :<c-u>exe <sid>toggle_auto(0)<cr>
+nno <silent> ]oa    :<c-u>exe <sid>toggle_auto(1)<cr>
+nno <silent> coa    :<c-u>exe <sid>toggle_auto(!exists('#auto_save_and_read'))<cr>
