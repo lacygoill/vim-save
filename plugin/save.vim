@@ -3,7 +3,9 @@ if exists('g:loaded_save')
 endif
 let g:loaded_save = 1
 
-" Auto read {{{1
+" Options {{{1
+
+set autoread
 
 " When a file has been detected to have been changed outside of Vim and
 " it has not been changed inside of Vim, automatically read it again.
@@ -15,11 +17,58 @@ let g:loaded_save = 1
 "
 "         :set autoread<
 
-set autoread
+" Functions {{{1
+fu! save#toggle_auto(enable) abort "{{{2
+    if a:enable
+        augroup auto_save_and_read
+            au!
+            " When  no key  has been  pressed in  normal mode  for more  than 2s
+            " ('updatetime'), check whether any buffer has been modified outside
+            " of Vim.  If  one of them has been, Vim  will automatically re-read
+            " the file because we've set 'autoread'.
+            " NOTE:
+            " A modification  does not necessarily  involve the contents  of the
+            " file.  Changing its permissions is ALSO a modification.
+            au CursorHold * sil! checktime
 
-" Auto save {{{1 {{{1
+            " Also, save current buffer it if it has been modified.
+            "
+            "                                 ┌─ necessary to trigger autocmd sourcing vimrc
+            "                                 │
+            au BufLeave,CursorHold,WinLeave * nested if empty(&buftype)
+                                                  \|     sil! exe save#buffer()
+                                                  \| endif
+            echo '[auto save] ON'
+        augroup END
+    else
+        sil! au! auto_save_and_read
+        sil! aug! auto_save_and_read
+        echo '[auto save] OFF'
+    endif
+    return ''
+endfu
 
 sil call save#toggle_auto(1)
+
+" NOTE:
+" The 2 autocmds which have just been installed cause an issue.
+" When we search for a pattern in a file, the matches are highlighted.
+" After 2s, 'hls' is, unexpectedly, disabled by `vim-search`.
+" The reason is  Vim has noticed that  the search has moved the  cursor, but too
+" late.
+"
+" Solution1:
+" In ftplugin, set 'cole' to any value greater than `0`.
+"
+" Solution2:
+" In ~/.vim/after/other_plugin/matchparen.vim, install any autocmd
+" listening to `CursorMoved`:
+"
+"         au CursorMoved * "
+"
+" For an explanation of the issue, see:
+"
+"         https://github.com/vim/vim/issues/2053#issuecomment-327004968
 
 " Mappings {{{1
 
@@ -27,4 +76,3 @@ nno <silent> <c-s>  :<c-u>exe save#buffer()<cr>
 nno <silent> [oa    :<c-u>exe save#toggle_auto(0)<cr>
 nno <silent> ]oa    :<c-u>exe save#toggle_auto(1)<cr>
 nno <silent> coa    :<c-u>exe save#toggle_auto(!exists('#auto_save_and_read'))<cr>
-
