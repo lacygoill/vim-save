@@ -18,45 +18,21 @@ set autoread
 "         :set autoread<
 
 " Functions {{{1
-fu! s:buffer() "{{{2
-    if !&l:mod | return '' | endif
-
-    let [ x_save, y_save ] = [ getpos("'x"), getpos("'y") ]
-    let view = winsaveview()
+fu! s:save_buffer() "{{{2
+    " When  we  save  a buffer,  the  marks  ]  and  [  do not  match  the  last
+    " changed/yanked text but the whole buffer. We want to preserve these marks.
+    let change_marks = [ getpos("'["), getpos("']") ]
     try
-        try
-            norm! `[mx`]my
-        catch
-        endtry
-
-        try
-            sil update
-        catch
-            return 'echoerr '.string(v:exception)
-        endtry
-
-        try
-            norm! `xm[`ym]
-        catch
-        endtry
-
+        sil update
+    catch
+        return 'echoerr '.string(v:exception)
     finally
-        call setpos("'x", x_save)
-        call setpos("'y", y_save)
-        call winrestview(view)
+        call setpos("'[", change_marks[0])
+        call setpos("']", change_marks[1])
     endtry
-
     return ''
 endfu
 
-" When we save a buffer, the marks ]  and [ do not match the last changed/yanked
-" text but the whole buffer. We want to preserve these marks.
-"
-" So, we:
-"
-"         • `[mx`]my    temporarily duplicate the marks (using marks x and y)
-"         • update      save the buffer if needed
-"         • `xm[`ym]    restore the marks
 fu! s:toggle_auto(enable) abort "{{{2
     if a:enable
         augroup auto_save_and_read
@@ -75,7 +51,7 @@ fu! s:toggle_auto(enable) abort "{{{2
             "                                 ┌─ necessary to trigger autocmd sourcing vimrc
             "                                 │
             au BufLeave,CursorHold,WinLeave * nested if empty(&buftype)
-                                                  \|     sil! exe s:buffer()
+                                                  \|     sil! exe s:save_buffer()
                                                   \| endif
             echo '[auto save] ON'
         augroup END
@@ -111,7 +87,7 @@ sil call s:toggle_auto(1)
 
 " Mappings {{{1
 
-nno <silent> <c-s>  :<c-u>exe <sid>buffer()<cr>
+nno <silent> <c-s>  :<c-u>exe <sid>save_buffer()<cr>
 nno <silent> [oa    :<c-u>exe <sid>toggle_auto(0)<cr>
 nno <silent> ]oa    :<c-u>exe <sid>toggle_auto(1)<cr>
 nno <silent> coa    :<c-u>exe <sid>toggle_auto(!exists('#auto_save_and_read'))<cr>
