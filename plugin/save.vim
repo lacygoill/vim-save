@@ -33,6 +33,10 @@ fu! s:save_buffer() "{{{2
     return ''
 endfu
 
+" TODO:  In the  future, there may be a patch  improving `:lockmarks` to prevent
+" the  change marks  from being  altered after  saving a  buffer.  Revisit  this
+" function later if it's not needed anymore.
+
 fu! s:toggle_auto(enable) abort "{{{2
     if a:enable
         augroup auto_save_and_read
