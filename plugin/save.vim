@@ -91,7 +91,7 @@ sil call s:toggle_auto(1)
 
 " Mappings {{{1
 
-nno <silent> <c-s>  :<c-u>exe <sid>save_buffer()<cr>
-nno <silent> [oa    :<c-u>exe <sid>toggle_auto(0)<cr>
-nno <silent> ]oa    :<c-u>exe <sid>toggle_auto(1)<cr>
-nno <silent> coa    :<c-u>exe <sid>toggle_auto(!exists('#auto_save_and_read'))<cr>
+nno <silent><unique>  <c-s>  :<c-u>exe <sid>save_buffer()<cr>
+nno <silent><unique>  [oa    :<c-u>exe <sid>toggle_auto(0)<cr>
+nno <silent><unique>  ]oa    :<c-u>exe <sid>toggle_auto(1)<cr>
+nno <silent><unique>  coa    :<c-u>exe <sid>toggle_auto(!exists('#auto_save_and_read'))<cr>
