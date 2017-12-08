@@ -25,12 +25,11 @@ fu! s:save_buffer() "{{{2
     try
         sil update
     catch
-        return 'echoerr '.string(v:exception)
+        call my_lib#catch_error()
     finally
         call setpos("'[", change_marks[0])
         call setpos("']", change_marks[1])
     endtry
-    return ''
 endfu
 
 " TODO:  In the  future, there may be a patch  improving `:lockmarks` to prevent
@@ -55,7 +54,7 @@ fu! s:toggle_auto(enable) abort "{{{2
             "                                 ┌─ necessary to trigger autocmd sourcing vimrc
             "                                 │
             au BufLeave,CursorHold,WinLeave * nested if empty(&buftype)
-                                                  \|     sil! exe s:save_buffer()
+                                                  \|     sil! call s:save_buffer()
                                                   \| endif
             echo '[auto save] ON'
         augroup END
@@ -64,7 +63,6 @@ fu! s:toggle_auto(enable) abort "{{{2
         sil! aug! auto_save_and_read
         echo '[auto save] OFF'
     endif
-    return ''
 endfu
 
 sil call s:toggle_auto(1)
@@ -91,7 +89,7 @@ sil call s:toggle_auto(1)
 
 " Mappings {{{1
 
-nno  <silent><unique>  <c-s>  :<c-u>exe <sid>save_buffer()<cr>
-nno  <silent><unique>  [oa    :<c-u>exe <sid>toggle_auto(0)<cr>
-nno  <silent><unique>  ]oa    :<c-u>exe <sid>toggle_auto(1)<cr>
-nno  <silent><unique>  coa    :<c-u>exe <sid>toggle_auto(!exists('#auto_save_and_read'))<cr>
+nno  <silent><unique>  <c-s>  :<c-u>call <sid>save_buffer()<cr>
+nno  <silent><unique>  [oa    :<c-u>call <sid>toggle_auto(0)<cr>
+nno  <silent><unique>  ]oa    :<c-u>call <sid>toggle_auto(1)<cr>
+nno  <silent><unique>  coa    :<c-u>call <sid>toggle_auto(!exists('#auto_save_and_read'))<cr>
