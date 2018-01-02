@@ -25,7 +25,7 @@ fu! s:save_buffer() "{{{2
     try
         sil update
     catch
-        return my_lib#catch_error()
+        return lg#catch_error()
     finally
         call setpos("'[", change_marks[0])
         call setpos("']", change_marks[1])
