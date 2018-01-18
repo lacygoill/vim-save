@@ -18,7 +18,7 @@ set autoread
 "         :set autoread<
 
 " Functions {{{1
-fu! s:save_buffer() "{{{2
+fu! save#buffer() "{{{2
     " When  we  save  a buffer,  the  marks  ]  and  [  do not  match  the  last
     " changed/yanked text but the whole buffer. We want to preserve these marks.
     let change_marks = [ getpos("'["), getpos("']") ]
@@ -36,7 +36,7 @@ endfu
 " the  change marks  from being  altered after  saving a  buffer.  Revisit  this
 " function later if it's not needed anymore.
 
-fu! s:toggle_auto(enable) abort "{{{2
+fu! save#toggle_auto(enable) abort "{{{2
     if a:enable
         augroup auto_save_and_read
             au!
@@ -54,7 +54,7 @@ fu! s:toggle_auto(enable) abort "{{{2
             "                                 ┌─ necessary to trigger autocmd sourcing vimrc
             "                                 │
             au BufLeave,CursorHold,WinLeave * nested if empty(&buftype)
-                                                  \|     sil! call s:save_buffer()
+                                                  \|     sil! call save#buffer()
                                                   \| endif
             echo '[auto save] ON'
         augroup END
@@ -65,7 +65,7 @@ fu! s:toggle_auto(enable) abort "{{{2
     endif
 endfu
 
-sil call s:toggle_auto(1)
+sil call save#toggle_auto(1)
 
 " NOTE:
 " The 2 autocmds which have just been installed cause an issue.
@@ -89,7 +89,7 @@ sil call s:toggle_auto(1)
 
 " Mappings {{{1
 
-nno  <silent><unique>  <c-s>  :<c-u>call <sid>save_buffer()<cr>
-nno  <silent><unique>  [oa    :<c-u>call <sid>toggle_auto(0)<cr>
-nno  <silent><unique>  ]oa    :<c-u>call <sid>toggle_auto(1)<cr>
-nno  <silent><unique>  coa    :<c-u>call <sid>toggle_auto(!exists('#auto_save_and_read'))<cr>
+nno  <silent><unique>  <c-s>  :<c-u>call save#buffer()<cr>
+nno  <silent><unique>  [oa    :<c-u>call save#toggle_auto(0)<cr>
+nno  <silent><unique>  ]oa    :<c-u>call save#toggle_auto(1)<cr>
+nno  <silent><unique>  coa    :<c-u>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
