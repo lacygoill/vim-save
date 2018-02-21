@@ -51,11 +51,11 @@ fu! save#toggle_auto(enable) abort "{{{2
 
             " Also, save current buffer it if it has been modified.
            "
-            "                                 ┌─ necessary to trigger autocmd sourcing vimrc
-            "                                 │
-            au BufLeave,CursorHold,WinLeave * nested if empty(&buftype)
-                                                  \|     sil! call save#buffer()
-                                                  \| endif
+            "                                         ┌─ necessary to trigger autocmd sourcing vimrc
+            "                                         │
+            au BufLeave,CursorHold,WinLeave,FocusLost * nested if empty(&buftype)
+                                                     \|     sil! call save#buffer()
+                                                     \| endif
             echo '[auto save] ON'
         augroup END
     else
