@@ -38,7 +38,7 @@ endfu
 " function later if it's not needed anymore.
 
 fu! save#toggle_auto(enable) abort "{{{2
-    if a:enable
+    if a:enable && !exists('#auto_save_and_read')
         augroup auto_save_and_read
             au!
             " When  no key  has been  pressed in  normal mode  for more  than 2s
@@ -79,9 +79,10 @@ fu! save#toggle_auto(enable) abort "{{{2
                                                      \| endif
             echo '[auto save] ON'
         augroup END
-    else
-        sil! au! auto_save_and_read
-        sil! aug! auto_save_and_read
+
+    elseif !a:enable && exists('#auto_save_and_read')
+        au! auto_save_and_read
+        aug! auto_save_and_read
         echo '[auto save] OFF'
     endif
 endfu
