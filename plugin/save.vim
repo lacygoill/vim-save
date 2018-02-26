@@ -9,7 +9,7 @@ fu! save#buffer() "{{{2
     " changed/yanked text but the whole buffer. We want to preserve these marks.
     let change_marks = [ getpos("'["), getpos("']") ]
     try
-        if filereadable(expand('%:p'))
+        if &bt is# '' && bufname('%') isnot# ''
             sil update
         endif
     catch
