@@ -9,7 +9,9 @@ fu! save#buffer() "{{{2
     " changed/yanked text but the whole buffer. We want to preserve these marks.
     let change_marks = [ getpos("'["), getpos("']") ]
     try
-        sil update
+        if s:can_be_saved()
+            sil update
+        endif
     catch
         return lg#catch_error()
     finally
@@ -63,9 +65,7 @@ fu! save#toggle_auto(enable) abort "{{{2
             "}}}
             "                                           ┌─ necessary to trigger autocmd sourcing vimrc
             "                                           │
-            au BufLeave,CursorHold,WinLeave,FocusLost * nested if s:can_be_saved()
-                                                            \|     call timer_start(0, {-> save#buffer()})
-                                                            \| endif
+            au BufLeave,CursorHold,WinLeave,FocusLost * nested call timer_start(0, {-> save#buffer()})
             echo '[auto save] ON'
         augroup END
 
