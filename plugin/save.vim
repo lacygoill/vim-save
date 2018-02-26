@@ -33,7 +33,7 @@ fu! save#toggle_auto(enable) abort "{{{2
             " When  no key  has been  pressed in  normal mode  for more  than 2s
             " ('updatetime'), check whether any buffer has been modified outside
             " of Vim.  If  one of them has been, Vim  will automatically re-read
-            " the file because we've set 'autoread'.
+            " the file because we've set 'autoread' in `vim-term`.
             " NOTE:
             " A modification  does not necessarily  involve the contents  of the
             " file.  Changing its permissions is ALSO a modification.
