@@ -66,7 +66,7 @@ endfu
 sil call save#toggle_auto(1)
 
 " NOTE:
-" The 2 autocmds which have just been installed cause an issue.
+" The autocmd which have just been installed causes an issue.
 " When we search for a pattern in a file, the matches are highlighted.
 " After 2s, 'hls' is, unexpectedly, disabled by `vim-search`.
 " The reason is  Vim has noticed that  the search has moved the  cursor, but too
@@ -76,7 +76,7 @@ sil call save#toggle_auto(1)
 " In ftplugin, set 'cole' to any value greater than `0`.
 "
 " Solution2:
-" In ~/.vim/after/other_plugin/matchparen.vim, install any autocmd
+" In ~/.vim/after/plugin/my_matchparen.vim, install any autocmd
 " listening to `CursorMoved`:
 "
 "         au CursorMoved * "
