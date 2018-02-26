@@ -39,7 +39,7 @@ fu! save#toggle_auto(enable) abort "{{{2
             " NOTE:
             " A modification  does not necessarily  involve the contents  of the
             " file.  Changing its permissions is ALSO a modification.
-            au CursorHold * if s:can_be_saved() | checktime | endif
+            au CursorHold * if s:can_be_saved() | checktime % | endif
 
             " Also, save current buffer if it has been modified.
             " Why a timer?{{{
