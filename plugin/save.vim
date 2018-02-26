@@ -74,8 +74,8 @@ fu! save#toggle_auto(enable) abort "{{{2
             "                                           ┌─ necessary to trigger autocmd sourcing vimrc
             "                                           │
             au BufLeave,CursorHold,WinLeave,FocusLost * nested if empty(&buftype) && !empty(bufname('%'))
-                                                     \|     call timer_start(0, {-> save#buffer()})
-                                                     \| endif
+                                                            \|     call timer_start(0, {-> save#buffer()})
+                                                            \| endif
             echo '[auto save] ON'
         augroup END
 
