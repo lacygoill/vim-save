@@ -24,6 +24,7 @@ fu! save#buffer() "{{{2
     let change_marks = [ getpos("'["), getpos("']") ]
     try
         sil update
+    catch /\v^Vim%(\(\a+\))?:E32/
     catch
         return lg#catch_error()
     finally
