@@ -3,20 +3,6 @@ if exists('g:loaded_save')
 endif
 let g:loaded_save = 1
 
-" Options {{{1
-
-set autoread
-
-" When a file has been detected to have been changed outside of Vim and
-" it has not been changed inside of Vim, automatically read it again.
-" Basically, it answers 'Yes', to the question where we usually answer `Load`.
-"
-" When the file has been deleted this is not done.
-" If the buffer-local value is set, use this command to empty it and use
-" the global value again:
-"
-"         :set autoread<
-
 " Functions {{{1
 fu! save#buffer() "{{{2
     " When  we  save  a buffer,  the  marks  ]  and  [  do not  match  the  last
