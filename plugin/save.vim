@@ -49,12 +49,32 @@ fu! save#toggle_auto(enable) abort "{{{2
             " file.  Changing its permissions is ALSO a modification.
             au CursorHold * sil! checktime
 
-            " Also, save current buffer it if it has been modified.
-           "
-            "                                         ┌─ necessary to trigger autocmd sourcing vimrc
-            "                                         │
+            " Also, save current buffer if it has been modified.
+            " Why a timer?{{{
+            "
+            " Because we can't execute `:update` if we change the focused window
+            " while  we're  on  the  command line  (E523).
+            "
+            " Maybe  because Vim  temporarily sets  'secure' when  we're on  the
+            " command  line  and  the  system  is  busy  (because  we're  typing
+            " characters and Vim  must process them or  react…).  This forbids
+            " the execution of autocmds.
+            "
+            " But for some reason, using a timer allows us to execute `:update`,
+            " even if  we're on the command  line.
+            " Maybe because the timer delays the execution of the command until
+            " the system is not busy anymore.
+            "
+            " MWE:
+            "         :call timer_start(5000, {-> execute('let g:debug = 42', '')})
+            "         :<c-r>=debug Enter
+            "         … wait 5s on the command line
+            "         :<c-r>=debug Enter
+            "}}}
+            "                                           ┌─ necessary to trigger autocmd sourcing vimrc
+            "                                           │
             au BufLeave,CursorHold,WinLeave,FocusLost * nested if empty(&buftype)
-                                                     \|     sil! call save#buffer()
+                                                     \|     call timer_start(0, {-> save#buffer()})
                                                      \| endif
             echo '[auto save] ON'
         augroup END
