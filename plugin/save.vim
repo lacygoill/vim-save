@@ -32,16 +32,7 @@ fu! save#toggle_auto(enable) abort "{{{2
     if a:enable && !exists('#auto_save_and_read')
         augroup auto_save_and_read
             au!
-            " When  no key  has been  pressed in  normal mode  for more  than 2s
-            " ('updatetime'), check whether any buffer has been modified outside
-            " of Vim.  If  one of them has been, Vim  will automatically re-read
-            " the file because we've set 'autoread' in `vim-term`.
-            " NOTE:
-            " A modification  does not necessarily  involve the contents  of the
-            " file.  Changing its permissions is ALSO a modification.
-            au CursorHold * nested if s:can_be_saved() | checktime % | endif
-
-            " Also, save current buffer if it has been modified.
+            " Save current buffer if it has been modified.
             " Why a timer?{{{
             "
             " Because we can't execute `:update` if we change the focused window
