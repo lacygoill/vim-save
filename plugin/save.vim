@@ -9,7 +9,7 @@ fu! save#buffer() "{{{2
     " changed/yanked text but the whole buffer. We want to preserve these marks.
     let change_marks = [ getpos("'["), getpos("']") ]
     try
-        if s:can_be_saved()
+        if filereadable(expand('%:p'))
             sil update
         endif
     catch
@@ -23,10 +23,6 @@ endfu
 " TODO:  In the  future, there may be a patch  improving `:lockmarks` to prevent
 " the  change marks  from being  altered after  saving a  buffer.  Revisit  this
 " function later if it's not needed anymore.
-
-fu! s:can_be_saved() abort "{{{2
-    return empty(&bt) && !empty(bufname('%'))
-endfu
 
 fu! save#toggle_auto(enable) abort "{{{2
     if a:enable && !exists('#auto_save_and_read')
