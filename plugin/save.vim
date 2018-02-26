@@ -36,6 +36,10 @@ endfu
 " the  change marks  from being  altered after  saving a  buffer.  Revisit  this
 " function later if it's not needed anymore.
 
+fu! s:can_be_saved() abort "{{{2
+    return empty(&bt) && !empty(bufname('%'))
+endfu
+
 fu! save#toggle_auto(enable) abort "{{{2
     if a:enable && !exists('#auto_save_and_read')
         augroup auto_save_and_read
@@ -47,7 +51,7 @@ fu! save#toggle_auto(enable) abort "{{{2
             " NOTE:
             " A modification  does not necessarily  involve the contents  of the
             " file.  Changing its permissions is ALSO a modification.
-            au CursorHold * sil! checktime
+            au CursorHold * if s:can_be_saved() | checktime | endif
 
             " Also, save current buffer if it has been modified.
             " Why a timer?{{{
@@ -73,7 +77,7 @@ fu! save#toggle_auto(enable) abort "{{{2
             "}}}
             "                                           ┌─ necessary to trigger autocmd sourcing vimrc
             "                                           │
-            au BufLeave,CursorHold,WinLeave,FocusLost * nested if empty(&buftype) && !empty(bufname('%'))
+            au BufLeave,CursorHold,WinLeave,FocusLost * nested if s:can_be_saved()
                                                             \|     call timer_start(0, {-> save#buffer()})
                                                             \| endif
             echo '[auto save] ON'
