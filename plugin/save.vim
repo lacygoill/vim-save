@@ -87,7 +87,7 @@ sil call save#toggle_auto(1)
 
 " Mappings {{{1
 
-nno  <silent><unique>  <c-s>  :<c-u>call save#buffer()<cr>
-nno  <silent><unique>  [oa    :<c-u>call save#toggle_auto(0)<cr>
-nno  <silent><unique>  ]oa    :<c-u>call save#toggle_auto(1)<cr>
-nno  <silent><unique>  coa    :<c-u>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
+nno  <silent><unique>  <c-s>    :<c-u>call save#buffer()<cr>
+nno  <silent><unique>  [o<c-s>  :<c-u>call save#toggle_auto(0)<cr>
+nno  <silent><unique>  ]o<c-s>  :<c-u>call save#toggle_auto(1)<cr>
+nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
