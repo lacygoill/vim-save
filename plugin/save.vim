@@ -20,9 +20,10 @@ fu! save#buffer() "{{{2
     endtry
 endfu
 
-" TODO:  In the  future, there may be a patch  improving `:lockmarks` to prevent
-" the  change marks  from being  altered after  saving a  buffer.  Revisit  this
-" function later if it's not needed anymore.
+" TODO:
+" In the  future, there  may be  a patch improving  `:lockmarks` to  prevent the
+" change marks from mutating after saving a buffer.  Revisit this function later
+" if it's not needed anymore.
 
 fu! save#toggle_auto(enable) abort "{{{2
     if a:enable && !exists('#auto_save_and_read')
