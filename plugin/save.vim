@@ -7,7 +7,7 @@ let g:loaded_save = 1
 fu! save#buffer() "{{{2
     " When  we  save  a buffer,  the  marks  ]  and  [  do not  match  the  last
     " changed/yanked text but the whole buffer. We want to preserve these marks.
-    let change_marks = [ getpos("'["), getpos("']") ]
+    let change_marks = [getpos("'["), getpos("']")]
     try
         if &bt is# '' && bufname('%') isnot# ''
             sil update
