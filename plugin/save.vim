@@ -30,30 +30,24 @@ fu! save#toggle_auto(enable) abort "{{{2
         augroup auto_save_and_read
             au!
             " Save current buffer if it has been modified.
-            " Why a timer?{{{
+            " Warning: Do NOT delay `save#buffer()` with a timer.{{{
             "
-            " Because we can't execute `:update` if we change the focused window
-            " while  we're  on  the  command line  (E523).
+            " Even if you have an issue for which delaying seems like a good fix.
             "
-            " Maybe  because Vim  temporarily sets  'secure' when  we're on  the
-            " command  line  and  the  system  is  busy  (because  we're  typing
-            " characters and Vim  must process them or  react…).  This forbids
-            " the execution of autocmds.
+            " If you do use a timer, and:
             "
-            " But for some reason, using a timer allows us to execute `:update`,
-            " even if  we're on the command  line.
-            " Maybe because the timer delays the execution of the command until
-            " the system is not busy anymore.
+            "         1. the current buffer A is modified
+            "         2. you press `]q` to move to the next entry in the qfl
+            "         3. you end up in a new buffer B
             "
-            " MWE:
-            "         :call timer_start(5000, {-> execute('let g:debug = 42', '')})
-            "         :<c-r>=debug Enter
-            "         … wait 5s on the command line
-            "         :<c-r>=debug Enter
+            " The buffer A won't be saved.
+            "
+            " But we could wrongly think that it has, and commit the old version
+            " of A: this would make us lose all the changes we did in A.
             "}}}
-            "                                           ┌─ necessary to trigger autocmd sourcing vimrc
+            "                                           ┌ necessary to trigger autocmd sourcing vimrc
             "                                           │
-            au BufLeave,CursorHold,WinLeave,FocusLost * nested call timer_start(0, {-> save#buffer()})
+            au BufLeave,CursorHold,WinLeave,FocusLost * nested call save#buffer()
             echo '[auto save] ON'
         augroup END
 
