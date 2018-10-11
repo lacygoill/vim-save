@@ -11,7 +11,7 @@ fu! save#buffer() "{{{2
     " saved states,  you'll probably be  stuck in a  loop which includes  only 2
     " states, the last one and the last but one.
     "}}}
-    if match(map(tabpagebuflist(), {i,v -> bufname(v)}), 'undotree_') >= 0
+    if match(map(tabpagebuflist(), {i,v -> bufname(v)}), '^undotree_\d\+') >= 0
         return
     endif
 
