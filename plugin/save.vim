@@ -5,6 +5,16 @@ let g:loaded_save = 1
 
 " Functions {{{1
 fu! save#buffer() "{{{2
+    " Can't go back to old saved states with undotree mapping `}` if we save automatically.{{{
+    "
+    " If you  disable this `if`  block, when  you press `}`  to get back  to old
+    " saved states,  you'll probably be  stuck in a  loop which includes  only 2
+    " states, the last one and the last but one.
+    "}}}
+    if match(map(tabpagebuflist(), {i,v -> bufname(v)}), 'undotree_') >= 0
+        return
+    endif
+
     " When  we  save  a buffer,  the  marks  ]  and  [  do not  match  the  last
     " changed/yanked text but the whole buffer. We want to preserve these marks.
     let change_marks = [getpos("'["), getpos("']")]
