@@ -35,6 +35,11 @@ endfu
 " change marks from mutating after saving a buffer.  Revisit this function later
 " if it's not needed anymore.
 
+fu! s:is_recovering_swapfile() abort "{{{2
+    " https://stackoverflow.com/a/10358194/9780968
+    return index(split(system('ps -o command= -p '.getpid())), '-r') >= 0
+endfu
+
 fu! save#toggle_auto(enable) abort "{{{2
     if a:enable && !exists('#auto_save_and_read')
         augroup auto_save_and_read
@@ -68,7 +73,17 @@ fu! save#toggle_auto(enable) abort "{{{2
     endif
 endfu
 
-sil call save#toggle_auto(1)
+" Purpose:{{{
+"
+" When we're trying to recover a swapfile, we don't want the recovered
+" version to automatically overwrite the original file.
+"
+" We prefer to save it in a temporary  file, and diff it against the original to
+" check that the recovered version is indeed newer, and that no line is missing.
+"}}}
+if !s:is_recovering_swapfile()
+    sil call save#toggle_auto(1)
+endif
 
 " NOTE:
 " The autocmd which have just been installed causes an issue.
