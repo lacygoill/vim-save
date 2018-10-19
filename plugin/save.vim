@@ -37,7 +37,7 @@ endfu
 
 fu! s:is_recovering_swapfile() abort "{{{2
     " https://stackoverflow.com/a/10358194/9780968
-    return index(split(system('ps -o command= -p '.getpid())), '-r') >= 0
+    sil return index(split(system('ps -o command= -p '.getpid())), '-r') >= 0
 endfu
 
 fu! save#toggle_auto(enable) abort "{{{2
