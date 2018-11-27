@@ -60,9 +60,49 @@ fu! save#toggle_auto(enable) abort "{{{2
             " But we could wrongly think that it has, and commit the old version
             " of A: this would make us lose all the changes we did in A.
             "}}}
-            "                                           ┌ necessary to trigger autocmd sourcing vimrc
-            "                                           │
-            au BufLeave,CursorHold,WinLeave,FocusLost * nested call save#buffer()
+            " Could `nested` be useful here?{{{
+            "
+            " It could when  you modify your vimrc, and you  want the changes to
+            " be sourced automatically.
+            " More  generally,  it  could  be  useful  when  you  have  autocmds
+            " listening to `BufWritePre` or `BufWritePost`.
+            "}}}
+            " Why don't you use `nested`?{{{
+            "
+            " I don't like the idea of the vimrc being re-sourced automatically.
+            " I prefer having to press C-s.
+            " Same thing for any command executed on `BufWritePre` or `BufWritePost`.
+            "
+            " Also, it may create spurious bugs.
+            " For example, suppose you want to update a timestamp in a python buffer,
+            " but only after having modified it and left it.
+            " You could try this code:
+            "
+            "         augroup monitor_python_change
+            "             au!
+            "             au BufWritePre *.py call s:update_timestamp()
+            "             au WinLeave * nested sil update
+            "             "               ^
+            "             "               ✘
+            "         augroup END
+            "
+            "         fu! s:update_timestamp() abort
+            "             augroup update_timestamp
+            "                 au!
+            "                 au BufLeave * sil! 1/Last Modified: \zs.*/s//\=strftime('%c')/
+            "                     \ | exe 'au! update_timestamp'
+            "                     \ | aug! update_timestamp
+            "             augroup END
+            "         endfu
+            "
+            " But it wouldn't work as expected:
+            "
+            "         $ vim -Nu /tmp/vimrc -O /tmp/py.py /tmp/vimrc
+            "         :w (in the python buffer)
+            "         C-w C-w (the time is updated in the python buffer ✔)
+            "         C-w C-w (the time is updated in the vim buffer ✘)
+            "}}}
+            au BufLeave,CursorHold,WinLeave,FocusLost * call save#buffer()
             echo '[auto save] ON'
         augroup END
 
@@ -72,8 +112,17 @@ fu! save#toggle_auto(enable) abort "{{{2
         echo '[auto save] OFF'
     endif
 endfu
+" }}}1
+" Mappings {{{1
 
-" Purpose:{{{
+nno  <silent><unique>  <c-s>    :<c-u>call save#buffer()<cr>
+nno  <silent><unique>  [o<c-s>  :<c-u>call save#toggle_auto(0)<cr>
+nno  <silent><unique>  ]o<c-s>  :<c-u>call save#toggle_auto(1)<cr>
+nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
+" }}}1
+
+" Enable the automatic saving of a buffer.
+" But not when we're trying to recover a swapfile.{{{
 "
 " When we're trying to recover a swapfile, we don't want the recovered
 " version to automatically overwrite the original file.
@@ -83,31 +132,27 @@ endfu
 "}}}
 if !s:is_recovering_swapfile()
     sil call save#toggle_auto(1)
+    " Does the autocmd which we've just installed causes an issue?{{{
+    "
+    " It may.
+    "
+    " When you search for a pattern in a file, the matches are highlighted.
+    " After 2s, 'hls' may, unexpectedly, be disabled by `vim-search`.
+    " The reason is that  Vim has noticed that the search  has moved the cursor,
+    " but too late.
+    "
+    " Solution1:
+    " In ftplugin, set 'cole' to any value greater than `0`.
+    "
+    " Solution2:
+    " In ~/.vim/after/plugin/my_matchparen.vim, install any autocmd listening to
+    " `CursorMoved`:
+    "
+    "         au CursorMoved * "
+    "
+    " For an explanation of the issue, see:
+    "
+    "         https://github.com/vim/vim/issues/2053#issuecomment-327004968
+    "}}}
 endif
 
-" NOTE:
-" The autocmd which have just been installed causes an issue.
-" When we search for a pattern in a file, the matches are highlighted.
-" After 2s, 'hls' is, unexpectedly, disabled by `vim-search`.
-" The reason is  Vim has noticed that  the search has moved the  cursor, but too
-" late.
-"
-" Solution1:
-" In ftplugin, set 'cole' to any value greater than `0`.
-"
-" Solution2:
-" In ~/.vim/after/plugin/my_matchparen.vim, install any autocmd
-" listening to `CursorMoved`:
-"
-"         au CursorMoved * "
-"
-" For an explanation of the issue, see:
-"
-"         https://github.com/vim/vim/issues/2053#issuecomment-327004968
-
-" Mappings {{{1
-
-nno  <silent><unique>  <c-s>    :<c-u>call save#buffer()<cr>
-nno  <silent><unique>  [o<c-s>  :<c-u>call save#toggle_auto(0)<cr>
-nno  <silent><unique>  ]o<c-s>  :<c-u>call save#toggle_auto(1)<cr>
-nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
