@@ -121,6 +121,12 @@ nno  <silent><unique>  ]o<c-s>  :<c-u>call save#toggle_auto(1)<cr>
 nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
 " }}}1
 
+" FIXME: The `!s:is_recovering_swapfile()` guard is too slow! (≈ 20ms){{{
+"
+" This is because of the `system()` call.
+" If you find a way to make it quicker, you can uncomment it again.
+" For now, I let it commented, because I never try to recover a swapfile.
+"}}}
 " Enable the automatic saving of a buffer.
 " But not when we're trying to recover a swapfile.{{{
 "
@@ -130,7 +136,7 @@ nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_
 " We prefer to save it in a temporary  file, and diff it against the original to
 " check that the recovered version is indeed newer, and that no line is missing.
 "}}}
-if !s:is_recovering_swapfile()
+" if !s:is_recovering_swapfile()
     sil call save#toggle_auto(1)
     " Does the autocmd which we've just installed causes an issue?{{{
     "
@@ -154,5 +160,5 @@ if !s:is_recovering_swapfile()
     "
     "         https://github.com/vim/vim/issues/2053#issuecomment-327004968
     "}}}
-endif
+" endif
 
