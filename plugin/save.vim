@@ -171,6 +171,6 @@ augroup auto_save_delay
     " to check that the  recovered version is indeed newer, and  that no line is
     " missing.
     "}}}
-    au CmdlineEnter,CursorHold,InsertEnter  * call s:enable_on_startup()
+    au CmdlineEnter,CursorHold,InsertEnter * call s:enable_on_startup()
 augroup END
 
