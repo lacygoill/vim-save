@@ -43,15 +43,15 @@ fu! s:enable_on_startup() abort "{{{2
         "
         " When you search for a pattern in a file, the matches are highlighted.
         " After 2s, 'hls' may, unexpectedly, be disabled by `vim-search`.
-        " The reason is that  Vim has noticed that the search  has moved the cursor,
-        " but too late.
+        " The  reason is  that Vim  has noticed  that the  search has  moved the
+        " cursor, but too late.
         "
         " Solution1:
         " In ftplugin, set 'cole' to any value greater than `0`.
         "
         " Solution2:
-        " In ~/.vim/after/plugin/my_matchparen.vim, install any autocmd listening to
-        " `CursorMoved`:
+        " In   ~/.vim/after/plugin/my_matchparen.vim,    install   any   autocmd
+        " listening to `CursorMoved`:
         "
         "         au CursorMoved * "
         "
@@ -152,9 +152,13 @@ nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_
 " }}}1
 
 " Enable the automatic saving of a buffer.
-" Why delay the call to `save#toggle_auto(1)`?{{{
+" Why don't you call `save#toggle_auto(1)` directly?  Why using an autocmd?{{{
 "
-" It's too slow (≈ 20ms), because of the `system()` call.
+" Before calling `toggle_auto()`, we want to  make sure that Vim was not started
+" to recover a swapfile (`-r` argument).
+" To check this we call `s:is_recovering_swapfile()`.
+" This function calls `system()`.
+" `system()` is too slow (≈ 20ms).
 "}}}
 augroup auto_save_delay
     au!
