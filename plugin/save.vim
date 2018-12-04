@@ -35,6 +35,36 @@ endfu
 " change marks from mutating after saving a buffer.  Revisit this function later
 " if it's not needed anymore.
 
+fu! s:enable_on_startup() abort "{{{2
+    if !s:is_recovering_swapfile()
+        " Does the autocmd which installed by `save#toggle_auto(1)` causes an issue?{{{
+        "
+        " It may.
+        "
+        " When you search for a pattern in a file, the matches are highlighted.
+        " After 2s, 'hls' may, unexpectedly, be disabled by `vim-search`.
+        " The reason is that  Vim has noticed that the search  has moved the cursor,
+        " but too late.
+        "
+        " Solution1:
+        " In ftplugin, set 'cole' to any value greater than `0`.
+        "
+        " Solution2:
+        " In ~/.vim/after/plugin/my_matchparen.vim, install any autocmd listening to
+        " `CursorMoved`:
+        "
+        "         au CursorMoved * "
+        "
+        " For an explanation of the issue, see:
+        "
+        "         https://github.com/vim/vim/issues/2053#issuecomment-327004968
+        "}}}
+        sil call save#toggle_auto(1)
+    endif
+    au! auto_save_delay
+    aug! auto_save_delay
+endfu
+
 fu! s:is_recovering_swapfile() abort "{{{2
     " https://stackoverflow.com/a/10358194/9780968
     sil return index(split(system('ps -o command= -p '.getpid())), '-r') >= 0
@@ -121,44 +151,22 @@ nno  <silent><unique>  ]o<c-s>  :<c-u>call save#toggle_auto(1)<cr>
 nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
 " }}}1
 
-" FIXME: The `!s:is_recovering_swapfile()` guard is too slow! (≈ 20ms){{{
-"
-" This is because of the `system()` call.
-" If you find a way to make it quicker, you can uncomment it again.
-" For now, I let it commented, because I never try to recover a swapfile.
-"}}}
 " Enable the automatic saving of a buffer.
-" But not when we're trying to recover a swapfile.{{{
+" Why delay the call to `save#toggle_auto(1)`?{{{
 "
-" When we're trying to recover a swapfile, we don't want the recovered
-" version to automatically overwrite the original file.
-"
-" We prefer to save it in a temporary  file, and diff it against the original to
-" check that the recovered version is indeed newer, and that no line is missing.
+" It's too slow (≈ 20ms), because of the `system()` call.
 "}}}
-" if !s:is_recovering_swapfile()
-    sil call save#toggle_auto(1)
-    " Does the autocmd which we've just installed causes an issue?{{{
+augroup auto_save_delay
+    au!
+    " But not when we're trying to recover a swapfile.{{{
     "
-    " It may.
+    " When  we're trying  to recover  a swapfile,  we don't  want the  recovered
+    " version to automatically overwrite the original file.
     "
-    " When you search for a pattern in a file, the matches are highlighted.
-    " After 2s, 'hls' may, unexpectedly, be disabled by `vim-search`.
-    " The reason is that  Vim has noticed that the search  has moved the cursor,
-    " but too late.
-    "
-    " Solution1:
-    " In ftplugin, set 'cole' to any value greater than `0`.
-    "
-    " Solution2:
-    " In ~/.vim/after/plugin/my_matchparen.vim, install any autocmd listening to
-    " `CursorMoved`:
-    "
-    "         au CursorMoved * "
-    "
-    " For an explanation of the issue, see:
-    "
-    "         https://github.com/vim/vim/issues/2053#issuecomment-327004968
+    " We prefer to save it in a temporary file, and diff it against the original
+    " to check that the  recovered version is indeed newer, and  that no line is
+    " missing.
     "}}}
-" endif
+    au CmdlineEnter,CursorHold,InsertEnter  * call s:enable_on_startup()
+augroup END
 
