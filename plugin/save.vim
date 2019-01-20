@@ -47,6 +47,15 @@ endfu
 " if it's not needed anymore.
 
 fu! s:enable_on_startup() abort "{{{2
+    " Leave this block at the very beginning of the function.{{{
+    "
+    " If an error occurred in the function,  because of `abort`, the rest of the
+    " statements would not be processed.
+    " We want our autocmd to be cleared no matter what.
+    "}}}
+    au! auto_save_delay
+    aug! auto_save_delay
+
     if !s:is_recovering_swapfile()
         " Does the autocmd which installed by `save#toggle_auto(1)` causes an issue?{{{
         "
@@ -72,8 +81,6 @@ fu! s:enable_on_startup() abort "{{{2
         "}}}
         sil call save#toggle_auto(1)
     endif
-    au! auto_save_delay
-    aug! auto_save_delay
 endfu
 
 fu! s:is_recovering_swapfile() abort "{{{2
@@ -131,8 +138,7 @@ fu! save#toggle_auto(enable) abort "{{{2
             "             augroup update_timestamp
             "                 au!
             "                 au BufLeave * sil! 1/Last Modified: \zs.*/s//\=strftime('%c')/
-            "                     \ | exe 'au! update_timestamp'
-            "                     \ | aug! update_timestamp
+            "                 au BufLeave * exe 'au! update_timestamp' | aug! update_timestamp
             "             augroup END
             "         endfu
             "
@@ -167,9 +173,8 @@ nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_
 "
 " Before calling `toggle_auto()`, we want to  make sure that Vim was not started
 " to recover a swapfile (`-r` argument).
-" To check this we call `s:is_recovering_swapfile()`.
-" This function calls `system()`.
-" `system()` is too slow (≈ 20ms).
+" To  check  this  we  call `s:is_recovering_swapfile()`;  this  function  calls
+" `system()`; `system()` is too slow (≈ 20ms).
 "}}}
 augroup auto_save_delay
     au!
