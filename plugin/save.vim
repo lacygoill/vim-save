@@ -138,7 +138,7 @@ fu! save#toggle_auto(enable) abort "{{{2
             "             augroup update_timestamp
             "                 au!
             "                 au BufLeave * sil! 1/Last Modified: \zs.*/s//\=strftime('%c')/
-            "                 au BufLeave * exe 'au! update_timestamp' | aug! update_timestamp
+            "                 \ | exe 'au! update_timestamp' | aug! update_timestamp
             "             augroup END
             "         endfu
             "
