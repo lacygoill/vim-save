@@ -129,7 +129,7 @@ fu! save#toggle_auto(enable) abort "{{{2
             "         augroup monitor_python_change
             "             au!
             "             au BufWritePre *.py call s:update_timestamp()
-            "             au WinLeave * nested sil update
+            "             au WinLeave * ++nested sil update
             "             "               ^
             "             "               ✘
             "         augroup END
