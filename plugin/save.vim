@@ -47,15 +47,6 @@ endfu
 " if it's not needed anymore.
 
 fu! s:enable_on_startup() abort "{{{2
-    " Leave this block at the very beginning of the function.{{{
-    "
-    " If an error occurred in the function,  because of `abort`, the rest of the
-    " statements would not be processed.
-    " We want our autocmd to be cleared no matter what.
-    "}}}
-    au! auto_save_delay
-    aug! auto_save_delay
-
     if !s:is_recovering_swapfile()
         " Does the autocmd which installed by `save#toggle_auto(1)` causes an issue?{{{
         "
@@ -169,6 +160,15 @@ nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_
 " }}}1
 
 " Enable the automatic saving of a buffer.
+" But not when we're trying to recover a swapfile.{{{
+"
+" When we're trying  to recover a swapfile, we don't  want the recovered version
+" to automatically overwrite the original file.
+"
+" We prefer to save it in a temporary  file, and diff it against the original to
+" check that the recovered version is indeed newer, and that no line is missing.
+"}}}
+au CmdlineEnter,CursorHold,InsertEnter * ++once call s:enable_on_startup()
 " Why don't you call `save#toggle_auto(1)` directly?  Why using an autocmd?{{{
 "
 " Before calling `toggle_auto()`, we want to  make sure that Vim was not started
@@ -176,17 +176,3 @@ nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_
 " To  check  this  we  call `s:is_recovering_swapfile()`;  this  function  calls
 " `system()`; `system()` is too slow (≈ 20ms).
 "}}}
-augroup auto_save_delay
-    au!
-    " But not when we're trying to recover a swapfile.{{{
-    "
-    " When  we're trying  to recover  a swapfile,  we don't  want the  recovered
-    " version to automatically overwrite the original file.
-    "
-    " We prefer to save it in a temporary file, and diff it against the original
-    " to check that the  recovered version is indeed newer, and  that no line is
-    " missing.
-    "}}}
-    au CmdlineEnter,CursorHold,InsertEnter * call s:enable_on_startup()
-augroup END
-
