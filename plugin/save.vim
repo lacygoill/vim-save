@@ -168,7 +168,12 @@ nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_
 " We prefer to save it in a temporary  file, and diff it against the original to
 " check that the recovered version is indeed newer, and that no line is missing.
 "}}}
-au CmdlineEnter,CursorHold,InsertEnter * ++once call s:enable_on_startup()
+unlet! s:one_shot
+au CmdlineEnter,CursorHold,InsertEnter * ++once
+    \ if get(s:, 'one_shot', 1)
+    \ |     let s:one_shot = 0
+    \ |     call s:enable_on_startup()
+    \ | endif
 " Why don't you call `save#toggle_auto(1)` directly?  Why using an autocmd?{{{
 "
 " Before calling `toggle_auto()`, we want to  make sure that Vim was not started
