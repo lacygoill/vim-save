@@ -168,10 +168,10 @@ nno  <silent><unique>  co<c-s>  :<c-u>call save#toggle_auto(!exists('#auto_save_
 " We prefer to save it in a temporary  file, and diff it against the original to
 " check that the recovered version is indeed newer, and that no line is missing.
 "}}}
-unlet! s:one_shot
+unlet! s:did_shoot
 au CmdlineEnter,CursorHold,InsertEnter * ++once
-    \ if get(s:, 'one_shot', 1)
-    \ |     let s:one_shot = 0
+    \ if !get(s:, 'did_shoot', 0)
+    \ |     let s:did_shoot = 1
     \ |     call s:enable_on_startup()
     \ | endif
 " Why don't you call `save#toggle_auto(1)` directly?  Why using an autocmd?{{{
