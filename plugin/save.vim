@@ -70,6 +70,13 @@ fu! s:enable_on_startup() abort "{{{2
         "
         "         https://github.com/vim/vim/issues/2053#issuecomment-327004968
         "}}}
+        " Purpose of the variable:{{{
+        "
+        " Need to inspect it in `vim-statusline` to prevent the message `[no auto save]`
+        " from being  included in the status  line when we've just  started Vim,
+        " and the auto-saving autocmd has not been installed yet.
+        "}}}
+        let g:autosave_on_startup = 1
         sil call save#toggle_auto(1)
     endif
 endfu
@@ -141,13 +148,11 @@ fu! save#toggle_auto(enable) abort "{{{2
             "         C-w C-w (the time is updated in the vim buffer ✘)
             "}}}
             au BufLeave,CursorHold,WinLeave,FocusLost * call save#buffer()
-            echo '[auto save] ON'
         augroup END
 
     elseif !a:enable && exists('#auto_save_and_read')
         au! auto_save_and_read
         aug! auto_save_and_read
-        echo '[auto save] OFF'
     endif
 endfu
 " }}}1
