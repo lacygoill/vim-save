@@ -4,7 +4,7 @@ endif
 let g:loaded_save = 1
 
 " Functions {{{1
-fu! save#buffer() "{{{2
+fu save#buffer() "{{{2
     " Can't go back to old saved states with undotree mapping `}` if we save automatically.{{{
     "
     " If you  disable this `if`  block, when  you press `}`  to get back  to old
@@ -46,7 +46,7 @@ endfu
 " change marks from mutating after saving a buffer.  Revisit this function later
 " if it's not needed anymore.
 
-fu! s:enable_on_startup() abort "{{{2
+fu s:enable_on_startup() abort "{{{2
     if !s:is_recovering_swapfile()
         " Does the autocmd which installed by `save#toggle_auto(1)` causes an issue?{{{
         "
@@ -81,12 +81,12 @@ fu! s:enable_on_startup() abort "{{{2
     endif
 endfu
 
-fu! s:is_recovering_swapfile() abort "{{{2
+fu s:is_recovering_swapfile() abort "{{{2
     " https://stackoverflow.com/a/10358194/9780968
     sil return index(split(system('ps -o command= -p '.getpid())), '-r') >= 0
 endfu
 
-fu! save#toggle_auto(enable) abort "{{{2
+fu save#toggle_auto(enable) abort "{{{2
     if a:enable && !exists('#auto_save_and_read')
         augroup auto_save_and_read
             au!
@@ -132,7 +132,7 @@ fu! save#toggle_auto(enable) abort "{{{2
             "             "               ✘
             "         augroup END
             "
-            "         fu! s:update_timestamp() abort
+            "         fu s:update_timestamp() abort
             "             augroup update_timestamp
             "                 au!
             "                 au BufLeave * sil! 1/Last Modified: \zs.*/s//\=strftime('%c')/
