@@ -15,36 +15,21 @@ fu save#buffer() "{{{2
         return
     endif
 
-    " When  we  save  a buffer,  the  marks  ]  and  [  do not  match  the  last
-    " changed/yanked text but the whole buffer. We want to preserve these marks.
-    let change_marks = [getpos("'["), getpos("']")]
-    try
-        if &bt is# '' && bufname('%') isnot# ''
-            " Why the bang after `:silent`?{{{
-            "
-            "     :sp /tmp/tex.tex
-            "     :DebugLocalPlugin -kind ftplugin -filetype tex
-            "     :e
-            "     > f (finish sourcing the first script)
-            "     G (move to the end of the pager)
-            "
-            " Focus another tmux window (!= pane), then come back:
-            " `E523` is raised.
-            "}}}
-            sil! update
-        endif
-    catch
-        return lg#catch_error()
-    finally
-        call setpos("'[", change_marks[0])
-        call setpos("']", change_marks[1])
-    endtry
+    if &bt is# '' && bufname('%') isnot# ''
+        " Why the bang after `:silent`?{{{
+        "
+        "     :sp /tmp/tex.tex
+        "     :DebugLocalPlugin -kind ftplugin -filetype tex
+        "     :e
+        "     > f (finish sourcing the first script)
+        "     G (move to the end of the pager)
+        "
+        " Focus another tmux window (!= pane), then come back:
+        " `E523` is raised.
+        "}}}
+        sil! lockm update
+    endif
 endfu
-
-" TODO:
-" In the  future, there  may be  a patch improving  `:lockmarks` to  prevent the
-" change marks from mutating after saving a buffer.  Revisit this function later
-" if it's not needed anymore.
 
 fu s:enable_on_startup() abort "{{{2
     if !s:is_recovering_swapfile()
