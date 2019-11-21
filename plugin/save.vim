@@ -139,6 +139,8 @@ fu save#toggle_auto(enable) abort "{{{2
         au! auto_save_and_read
         aug! auto_save_and_read
     endif
+    " We have a flag in the tab line; we want it to be updated immediately.
+    redrawt
 endfu
 " }}}1
 " Mappings {{{1
