@@ -3,6 +3,14 @@ if exists('g:loaded_save')
 endif
 let g:loaded_save = 1
 
+" Autocmds {{{1
+
+augroup hoist_nas
+    au!
+    au User MyFlags call statusline#hoist('global',
+        \ '%{!exists("#auto_save_and_read") ? "[NAS]" : ""}', 7)
+augroup END
+
 " Functions {{{1
 fu save#buffer() "{{{2
     " Can't go back to old saved states with undotree mapping `}` if we save automatically.{{{
