@@ -40,6 +40,8 @@ fu save#buffer() "{{{2
 endfu
 
 fu s:enable_on_startup() abort "{{{2
+    au! autosave_enable_on_startup
+    aug! autosave_enable_on_startup
     if ! s:is_recovering_swapfile()
         " for the next `#toggle_auto()` to work as expected, the augroup must not exist
         aug! auto_save_and_read
@@ -126,8 +128,9 @@ fu save#toggle_auto(enable) abort "{{{2
             "     fu s:update_timestamp() abort
             "         augroup update_timestamp
             "             au!
-            "             au BufLeave * sil! 1/Last Modified: \zs.*/s//\=strftime('%c')/
-            "                 \ | exe 'au! update_timestamp' | aug! update_timestamp
+            "             au BufLeave *
+            "                 \ exe 'au! update_timestamp'
+            "                 \ | sil! 1/Last Modified: \zs.*/s//\=strftime('%c')/
             "         augroup END
             "     endfu
             "
@@ -179,7 +182,6 @@ if ! has('nvim')
         call save#toggle_auto(1)
     endif
 else
-    unlet! s:did_shoot
     " Why don't you call `save#toggle_auto(1)` directly?  Why using an autocmd?{{{
     "
     " Before calling  `#toggle_auto()`, we want  to make  sure that Vim  was not
@@ -187,11 +189,10 @@ else
     " To check  this we  call `s:is_recovering_swapfile()`; this  function calls
     " `system()`; `system()` is too slow (≈ 20ms).
     "}}}
-    au TextChanged,TextChangedI,CursorHold,CursorHoldI * ++once
-        \ if !get(s:, 'did_shoot', 0)
-        \ |     let s:did_shoot = 1
-        \ |     call s:enable_on_startup()
-        \ | endif
+    augroup autosave_enable_on_startup
+        au!
+        au TextChanged,TextChangedI,CursorHold,CursorHoldI * call s:enable_on_startup()
+    augroup END
 
     " when Nvim has just started, we don't want the flag `[NAS]` to be displayed in the tab line
     augroup auto_save_and_read
