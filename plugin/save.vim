@@ -24,17 +24,6 @@ fu save#buffer() "{{{2
     endif
 
     if &bt is# '' && bufname('%') isnot# ''
-        " Why the bang after `:silent`?{{{
-        "
-        "     :sp /tmp/tex.tex
-        "     :DebugLocalPlugin -kind ftplugin -filetype tex
-        "     :e
-        "     > f (finish sourcing the first script)
-        "     G (move to the end of the pager)
-        "
-        " Focus another tmux window (!= pane), then come back:
-        " `E523` is raised.
-        "}}}
         sil! lockm update
     endif
 endfu
