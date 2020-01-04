@@ -31,7 +31,7 @@ endfu
 fu s:enable_on_startup() abort "{{{2
     au! autosave_enable_on_startup
     aug! autosave_enable_on_startup
-    if ! s:is_recovering_swapfile()
+    if !s:is_recovering_swapfile()
         " for the next `#toggle_auto()` to work as expected, the augroup must not exist
         aug! auto_save_and_read
         " Does the autocmd installed by `save#toggle_auto(1)` cause an issue?{{{
@@ -157,7 +157,7 @@ nno <silent><unique> co<c-s> :<c-u>call save#toggle_auto(!exists('#auto_save_and
 "    - remove `s:enable_on_startup()`
 "    - simplify `s:is_recovering_swapfile()` (remove the `if` guard, and the block invoking `system()`)
 "}}}
-if ! has('nvim')
+if !has('nvim')
     " But not when we're trying to recover a swapfile.{{{
     "
     " When  we're trying  to recover  a swapfile,  we don't  want the  recovered
@@ -167,7 +167,7 @@ if ! has('nvim')
     " to check that the  recovered version is indeed newer, and  that no line is
     " missing.
     "}}}
-    if ! s:is_recovering_swapfile()
+    if !s:is_recovering_swapfile()
         call save#toggle_auto(1)
     endif
 else
