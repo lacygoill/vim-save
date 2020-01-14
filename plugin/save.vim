@@ -8,7 +8,7 @@ let g:loaded_save = 1
 augroup hoist_nas
     au!
     au User MyFlags call statusline#hoist('global',
-        \ '%{!exists("#auto_save_and_read") ? "[NAS]" : ""}', 7)
+        \ '%{!exists("#auto_save_and_read") ? "[NAS]" : ""}', 7, expand('<sfile>')..':'..expand('<sflnum>'))
 augroup END
 
 " Functions {{{1
