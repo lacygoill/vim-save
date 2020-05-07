@@ -95,42 +95,30 @@ fu save#toggle_auto(enable) abort "{{{2
             " More  generally,  it  could  be  useful  when  you  have  autocmds
             " listening to `BufWritePre` or `BufWritePost`.
             "}}}
-            "   Why don't you use it?{{{
+            " Why `++nested`?{{{
             "
-            " I don't like the idea of the vimrc being re-sourced automatically.
-            " I prefer having to press `C-s`.
-            " Same thing for any command executed on `BufWritePre` or `BufWritePost`.
+            " It can help fix a bug in `vim-repeat`:
             "
-            " Also, it may create spurious bugs.
-            " For example,  suppose you want to  update a timestamp in  a python
-            " buffer, but only after having modified it and left it.
-            " You could try this code:
+            "     $ vim -Nu <(cat <<'EOF'
+            "         sil e /tmp/file2 | %d | 0pu=['abcdef', 'abcdef']
+            "         sil vs /tmp/file1 | %d | 0pu=['abcdef', 'abcdef']
+            "         windo 1
+            "         set ut=1000 | au CursorHold * update
+            "         set rtp-=~/.vim
+            "         set rtp-=~/.vim/after
+            "         set rtp^=~/.vim/plugged/vim-repeat
+            "         set rtp^=~/.vim/plugged/vim-sneak
+            "     EOF
+            "     )
+            "     " press: dzcd j
+            "     " wait for 'CursorHold' to be fired, and ':update' to be run
+            "     " press: .
+            "     " vim-sneak asks you for a pair of characters – again
+            "     " it should not; it should automatically re-use the last one
             "
-            "     augroup monitor_python_change
-            "         au!
-            "         au BufWritePre *.py call s:update_timestamp()
-            "         au WinLeave * ++nested sil update
-            "         "               ^
-            "         "               ✘
-            "     augroup END
-            "
-            "     fu s:update_timestamp() abort
-            "         augroup update_timestamp
-            "             au!
-            "             au BufLeave *
-            "                 \ exe 'au! update_timestamp'
-            "                 \ | sil! 1/Last Modified: \zs.*/s//\=strftime('%c')/
-            "         augroup END
-            "     endfu
-            "
-            " But it wouldn't work as expected:
-            "
-            "     $ vim -Nu /tmp/vimrc -O /tmp/py.py /tmp/vimrc
-            "     :w (in the python buffer)
-            "     C-w C-w (the time is updated in the python buffer ✔)
-            "     C-w C-w (the time is updated in the vim buffer ✘)
+            " See: https://github.com/tpope/vim-repeat/issues/59#issuecomment-402012147
             "}}}
-            au BufLeave,CursorHold,WinLeave,FocusLost * call save#buffer()
+            au BufLeave,CursorHold,WinLeave,FocusLost * ++nested call save#buffer()
         augroup END
 
     elseif !a:enable && exists('#auto_save_and_read')
