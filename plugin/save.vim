@@ -5,8 +5,7 @@ let g:loaded_save = 1
 
 " Autocmds {{{1
 
-augroup hoist_nas
-    au!
+augroup hoist_nas | au!
     au User MyFlags call statusline#hoist('global',
         \ '%{!exists("#auto_save_and_read") ? "[NAS]" : ""}', 7, expand('<sfile>')..':'..expand('<sflnum>'))
 augroup END
@@ -70,8 +69,7 @@ endfu
 
 fu save#toggle_auto(enable) abort "{{{2
     if a:enable && !exists('#auto_save_and_read')
-        augroup auto_save_and_read
-            au!
+        augroup auto_save_and_read | au!
             " Save current buffer if it has been modified.
             " Warning: Do NOT delay `save#buffer()` with a timer.{{{
             "
@@ -166,8 +164,7 @@ else
     " To check  this we  call `s:is_recovering_swapfile()`; this  function calls
     " `system()`; `system()` is too slow (≈ 20ms).
     "}}}
-    augroup autosave_enable_on_startup
-        au!
+    augroup autosave_enable_on_startup | au!
         au TextChanged,TextChangedI,CursorHold,CursorHoldI * call s:enable_on_startup()
     augroup END
 
