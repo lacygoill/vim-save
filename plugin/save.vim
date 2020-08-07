@@ -7,7 +7,7 @@ let g:loaded_save = 1
 
 augroup hoist_nas | au!
     au User MyFlags call statusline#hoist('global',
-        \ '%{!exists("#auto_save_and_read") ? "[NAS]" : ""}', 7, expand('<sfile>')..':'..expand('<sflnum>'))
+        \ '%{!exists("#auto_save_and_read") ? "[NAS]" : ""}', 7, expand('<sfile>') .. ':' .. expand('<sflnum>'))
 augroup END
 
 " Functions {{{1
@@ -18,11 +18,11 @@ fu save#buffer() "{{{2
     " saved states,  you'll probably be  stuck in a  loop which includes  only 2
     " states, the last one and the last but one.
     "}}}
-    if match(map(tabpagebuflist(), {_,v -> bufname(v)}), '^undotree_\d\+') >= 0
+    if tabpagebuflist()->map({_, v -> bufname(v)})->match('^undotree_\d\+') >= 0
         return
     endif
 
-    if &bt is# '' && bufname('%') isnot# ''
+    if &bt == '' && bufname('%') != ''
         sil! lockm update
     endif
 endfu
@@ -93,7 +93,7 @@ endfu
 " }}}1
 " Mappings {{{1
 
-nno <silent><unique> <c-s>   :<c-u>call save#buffer()<cr>
+nno <silent><unique> <c-s> :<c-u>call save#buffer()<cr>
 nno <silent><unique> [o<c-s> :<c-u>call save#toggle_auto(0)<cr>
 nno <silent><unique> ]o<c-s> :<c-u>call save#toggle_auto(1)<cr>
 nno <silent><unique> co<c-s> :<c-u>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
