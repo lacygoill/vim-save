@@ -11,7 +11,7 @@ augroup hoist_nas | au!
 augroup END
 
 " Functions {{{1
-fu save#buffer() "{{{2
+fu save#buffer() abort "{{{2
     " Can't go back to old saved states with undotree mapping `}` if we save automatically.{{{
     "
     " If you  disable this `if`  block, when  you press `}`  to get back  to old
@@ -23,7 +23,20 @@ fu save#buffer() "{{{2
     endif
 
     if &bt == '' && bufname('%') != ''
-        sil! lockm update
+        " Don't replace this `try/catch` with `sil!`.{{{
+        "
+        " `sil!` can lead to weird issues.
+        "
+        " For example, once  we had an issue where a  regular buffer was wrongly
+        " transformed into a qf  buffer: https://github.com/vim/vim/issues/7352
+        "}}}
+        try
+            sil lockm update
+        catch
+            echohl ErrorMsg
+            echom v:exception
+            echohl NONE
+        endtry
     endif
 endfu
 
@@ -93,10 +106,10 @@ endfu
 " }}}1
 " Mappings {{{1
 
-nno <silent><unique> <c-s> :<c-u>call save#buffer()<cr>
-nno <silent><unique> [o<c-s> :<c-u>call save#toggle_auto(0)<cr>
-nno <silent><unique> ]o<c-s> :<c-u>call save#toggle_auto(1)<cr>
-nno <silent><unique> co<c-s> :<c-u>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
+nno <unique> <c-s> <cmd>call save#buffer()<cr>
+nno <unique> [o<c-s> <cmd>call save#toggle_auto(0)<cr>
+nno <unique> ]o<c-s> <cmd>call save#toggle_auto(1)<cr>
+nno <unique> co<c-s> <cmd>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
 " }}}1
 
 " Enable the automatic saving of a buffer.
