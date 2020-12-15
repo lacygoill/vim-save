@@ -32,6 +32,9 @@ fu save#buffer() abort "{{{2
         "}}}
         try
             sil lockm update
+        " Vim(update):E45: 'readonly' option is set (add ! to override)
+        catch /^Vim\%((\a\+)\)\=:E45:/
+            " let's ignore this entirely
         catch
             echohl ErrorMsg
             echom v:exception
