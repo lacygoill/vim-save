@@ -5,9 +5,9 @@ let g:loaded_save = 1
 
 " Autocmds {{{1
 
-augroup hoist_nas | au!
+augroup HoistNas | au!
     au User MyFlags call statusline#hoist('global',
-        \ '%{!exists("#auto_save_and_read") ? "[NAS]" : ""}', 7, expand('<sfile>:p') .. ':' .. expand('<sflnum>'))
+        \ '%{!exists("#AutoSaveAndRead") ? "[NAS]" : ""}', 7, expand('<sfile>:p') .. ':' .. expand('<sflnum>'))
 augroup END
 
 " Functions {{{1
@@ -48,8 +48,8 @@ fu s:is_recovering_swapfile() abort "{{{2
 endfu
 
 fu save#toggle_auto(enable) abort "{{{2
-    if a:enable && !exists('#auto_save_and_read')
-        augroup auto_save_and_read | au!
+    if a:enable && !exists('#AutoSaveAndRead')
+        augroup AutoSaveAndRead | au!
             " Save current buffer if it has been modified.
             " Warning: Do NOT delay `save#buffer()` with a timer.{{{
             "
@@ -99,9 +99,9 @@ fu save#toggle_auto(enable) abort "{{{2
             au BufLeave,CursorHold,WinLeave,FocusLost * ++nested call save#buffer()
         augroup END
 
-    elseif !a:enable && exists('#auto_save_and_read')
-        au! auto_save_and_read
-        aug! auto_save_and_read
+    elseif !a:enable && exists('#AutoSaveAndRead')
+        au! AutoSaveAndRead
+        aug! AutoSaveAndRead
     endif
     " We have a flag in the tab line; we want it to be updated immediately.
     redrawt
@@ -112,7 +112,7 @@ endfu
 nno <unique> <c-s> <cmd>call save#buffer()<cr>
 nno <unique> [o<c-s> <cmd>call save#toggle_auto(0)<cr>
 nno <unique> ]o<c-s> <cmd>call save#toggle_auto(1)<cr>
-nno <unique> co<c-s> <cmd>call save#toggle_auto(!exists('#auto_save_and_read'))<cr>
+nno <unique> co<c-s> <cmd>call save#toggle_auto(!exists('#AutoSaveAndRead'))<cr>
 " }}}1
 
 " Enable the automatic saving of a buffer.
