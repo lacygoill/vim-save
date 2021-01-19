@@ -1,130 +1,191 @@
-if exists('g:loaded_save')
-    finish
-endif
-let g:loaded_save = 1
+vim9 noclear
 
-" Autocmds {{{1
+if exists('loaded') | finish | endif
+var loaded = true
+
+# Options {{{1
+
+# What does `'autoread'` do?{{{
+#
+# When  a file  is detected  to have  been changed  outside of  the current  Vim
+# instance but not changed inside the latter, automatically read it again.
+# Basically, it answers 'Yes', to the question where we usually answer `Load`.
+#}}}
+# When does Vim check whether a file has been changed outside the current instance?{{{
+#
+# In the terminal, when you:
+#
+#    - try to write the buffer
+#    - execute a shell command
+#    - execute `:checktime`
+#
+# Also when you give  the focus to a Vim instance where the  file is loaded; but
+# only in  the GUI,  or in a  terminal which supports  the focus  event tracking
+# feature, such as xterm (and if `'t_fd'` and `'t_fe'` are correctly set).
+# See `:h xterm-focus-event`.
+#}}}
+set autoread
+
+# Autocmds {{{1
 
 augroup HoistNas | au!
-    au User MyFlags call statusline#hoist('global',
+    au User MyFlags statusline#hoist('global',
         \ '%{!exists("#AutoSaveAndRead") ? "[NAS]" : ""}', 7, expand('<sfile>:p') .. ':' .. expand('<sflnum>'))
 augroup END
 
-" Functions {{{1
-fu save#buffer() abort "{{{2
-    " Can't go back to old saved states with undotree mapping `}` if we save automatically.{{{
-    "
-    " If you  disable this `if`  block, when  you press `}`  to get back  to old
-    " saved states,  you'll probably be  stuck in a  loop which includes  only 2
-    " states, the last one and the last but one.
-    "}}}
-    if tabpagebuflist()->map({_, v -> bufname(v)})->match('^undotree_\d\+') >= 0
+augroup MyChecktime | au!
+    # Why `InsertEnter`?{{{
+    #
+    # The autocmd is adapted from blueyed's vimrc.
+    #
+    # I guess it makes sense because when  you're about to insert some text, you
+    # want to be  sure you're editing the  most recent version of  the file, and
+    # not an old one.  Editing an old one would cause a conflict when you'll try
+    # to save the buffer.
+    #}}}
+    au BufEnter,CursorHold,InsertEnter * ++nested AutoChecktime()
+augroup END
+
+# Functions {{{1
+def save#buffer() #{{{2
+    # Can't go back to old saved states with undotree mapping `}` if we save automatically.{{{
+    #
+    # If you  disable this `if`  block, when  you press `}`  to get back  to old
+    # saved states,  you'll probably be  stuck in a  loop which includes  only 2
+    # states, the last one and the last but one.
+    #}}}
+    if tabpagebuflist()->mapnew((_, v) => bufname(v))->match('^undotree_\d\+') >= 0
         return
     endif
 
     if &bt == '' && bufname('%') != ''
-        " Don't replace this `try/catch` with `sil!`.{{{
-        "
-        " `sil!` can lead to weird issues.
-        "
-        " For example, once  we had an issue where a  regular buffer was wrongly
-        " transformed into a qf  buffer: https://github.com/vim/vim/issues/7352
-        "}}}
+        # Don't replace this `try/catch` with `sil!`.{{{
+        #
+        # `sil!` can lead to weird issues.
+        #
+        # For example, once  we had an issue where a  regular buffer was wrongly
+        # transformed into a qf  buffer: https://github.com/vim/vim/issues/7352
+        #}}}
         try
             sil lockm update
-        " Vim(update):E45: 'readonly' option is set (add ! to override)
+        # Vim(update):E45: 'readonly' option is set (add ! to override)
         catch /^Vim\%((\a\+)\)\=:E45:/
-            " let's ignore this entirely
+            # let's ignore this entirely
         catch
             echohl ErrorMsg
             echom v:exception
             echohl NONE
         endtry
     endif
-endfu
+enddef
 
-fu s:is_recovering_swapfile() abort "{{{2
+def IsRecoveringSwapfile(): bool #{{{2
     sil return index(v:argv, '-r') >= 0
-endfu
+enddef
 
-fu save#toggle_auto(enable) abort "{{{2
-    if a:enable && !exists('#AutoSaveAndRead')
+def save#toggleAuto(enable = false) #{{{2
+    if enable && !exists('#AutoSaveAndRead')
         augroup AutoSaveAndRead | au!
-            " Save current buffer if it has been modified.
-            " Warning: Do NOT delay `save#buffer()` with a timer.{{{
-            "
-            " Even if you have an issue for which delaying seems like a good fix.
-            "
-            " If you do use a timer, and:
-            "
-            "    1. the current buffer A is modified
-            "    2. you press `]q` to move to the next entry in the qfl
-            "    3. you end up in a new buffer B
-            "
-            " The buffer A won't be saved.
-            "
-            " But we could wrongly think that it has, and commit the old version
-            " of A: this would make us lose all the changes we did in A.
-            "}}}
-            " Could `nested` be useful here?{{{
-            "
-            " It could when  you modify your vimrc, and you  want the changes to
-            " be sourced automatically.
-            " More  generally,  it  could  be  useful  when  you  have  autocmds
-            " listening to `BufWritePre` or `BufWritePost`.
-            "}}}
-            " Why `++nested`?{{{
-            "
-            " It can help fix a bug in `vim-repeat`:
-            "
-            "     $ vim -Nu <(cat <<'EOF'
-            "         sil e /tmp/file2 | %d | 0pu=['abcdef', 'abcdef']
-            "         sil vs /tmp/file1 | %d | 0pu=['abcdef', 'abcdef']
-            "         windo 1
-            "         set ut=1000 | au CursorHold * update
-            "         set rtp-=~/.vim
-            "         set rtp-=~/.vim/after
-            "         set rtp^=~/.vim/plugged/vim-repeat
-            "         set rtp^=~/.vim/plugged/vim-sneak
-            "     EOF
-            "     )
-            "     " press: dzcd j
-            "     " wait for 'CursorHold' to be fired, and ':update' to be run
-            "     " press: .
-            "     " vim-sneak asks you for a pair of characters – again
-            "     " it should not; it should automatically re-use the last one
-            "
-            " See: https://github.com/tpope/vim-repeat/issues/59#issuecomment-402012147
-            "}}}
-            au BufLeave,CursorHold,WinLeave,FocusLost * ++nested call save#buffer()
+            # Save current buffer if it has been modified.
+            # Warning: Do NOT delay `save#buffer()` with a timer.{{{
+            #
+            # Even if you have an issue for which delaying seems like a good fix.
+            #
+            # If you do use a timer, and:
+            #
+            #    1. the current buffer A is modified
+            #    2. you press `]q` to move to the next entry in the qfl
+            #    3. you end up in a new buffer B
+            #
+            # The buffer A won't be saved.
+            #
+            # But we could wrongly think that it has, and commit the old version
+            # of A: this would make us lose all the changes we did in A.
+            #}}}
+            # Could `nested` be useful here?{{{
+            #
+            # It could when  you modify your vimrc, and you  want the changes to
+            # be sourced automatically.
+            # More  generally,  it  could  be  useful  when  you  have  autocmds
+            # listening to `BufWritePre` or `BufWritePost`.
+            #}}}
+            # Why `++nested`?{{{
+            #
+            # It can help fix a bug in `vim-repeat`:
+            #
+            #     $ vim -Nu <(cat <<'EOF'
+            #         sil e /tmp/file2 | %d | 0pu=['abcdef', 'abcdef']
+            #         sil vs /tmp/file1 | %d | 0pu=['abcdef', 'abcdef']
+            #         windo 1
+            #         set ut=1000 | au CursorHold * update
+            #         set rtp-=~/.vim
+            #         set rtp-=~/.vim/after
+            #         set rtp^=~/.vim/plugged/vim-repeat
+            #         set rtp^=~/.vim/plugged/vim-sneak
+            #     EOF
+            #     )
+            #     " press: dzcd j
+            #     " wait for 'CursorHold' to be fired, and ':update' to be run
+            #     " press: .
+            #     " vim-sneak asks you for a pair of characters – again
+            #     " it should not; it should automatically re-use the last one
+            #
+            # See: https://github.com/tpope/vim-repeat/issues/59#issuecomment-402012147
+            #}}}
+            au BufLeave,CursorHold,WinLeave,FocusLost * ++nested save#buffer()
         augroup END
 
-    elseif !a:enable && exists('#AutoSaveAndRead')
+    elseif !enable && exists('#AutoSaveAndRead')
         au! AutoSaveAndRead
         aug! AutoSaveAndRead
     endif
-    " We have a flag in the tab line; we want it to be updated immediately.
+    # We have a flag in the tab line; we want it to be updated immediately.
     redrawt
-endfu
-" }}}1
-" Mappings {{{1
+enddef
+def AutoChecktime() #{{{2
+    if &bt != '' || bufname('%') == ''
+        return
+    endif
+    # What does it do?{{{
+    #
+    # Check whether  the current file has  been modified outside of  Vim.  If it
+    # has, Vim will automatically re-read it because we've set 'autoread'.
+    #
+    # A modification  does not necessarily  involve the CONTENTS  of the
+    # file.  Changing its PERMISSIONS is ALSO a modification.
+    #}}}
+    #   Why %?{{{
+    #
+    # The command is taken from blueyed's vimrc.
+    # I guess it  makes sense, because this function will  be called frequently,
+    # and if we have many buffers, without specifiying a buffer, Vim would check
+    # ALL buffers.  This could be too time-consuming.
+    #}}}
+    #   Why `silent!`?{{{
+    #
+    # The filename could have changed outside Vim.
+    #}}}
+    sil! checktime %
+enddef
+# }}}1
+# Mappings {{{1
 
 nno <unique> <c-s> <cmd>call save#buffer()<cr>
-nno <unique> [o<c-s> <cmd>call save#toggle_auto(0)<cr>
-nno <unique> ]o<c-s> <cmd>call save#toggle_auto(1)<cr>
-nno <unique> co<c-s> <cmd>call save#toggle_auto(!exists('#AutoSaveAndRead'))<cr>
-" }}}1
+nno <unique> [o<c-s> <cmd>call save#toggleAuto()<cr>
+nno <unique> ]o<c-s> <cmd>call save#toggleAuto(v:true)<cr>
+nno <unique> co<c-s> <cmd>call save#toggleAuto(!exists('#AutoSaveAndRead'))<cr>
+# }}}1
 
-" Enable the automatic saving of a buffer.
-" But not when we're trying to recover a swapfile.{{{
-"
-" When  we're trying  to recover  a swapfile,  we don't  want the  recovered
-" version to automatically overwrite the original file.
-"
-" We prefer to save it in a temporary file, and diff it against the original
-" to check that the  recovered version is indeed newer, and  that no line is
-" missing.
-"}}}
-if !s:is_recovering_swapfile()
-    call save#toggle_auto(1)
+# Enable the automatic saving of a buffer.
+# But not when we're trying to recover a swapfile.{{{
+#
+# When  we're trying  to recover  a swapfile,  we don't  want the  recovered
+# version to automatically overwrite the original file.
+#
+# We prefer to save it in a temporary file, and diff it against the original
+# to check that the  recovered version is indeed newer, and  that no line is
+# missing.
+#}}}
+if !IsRecoveringSwapfile()
+    save#toggleAuto(true)
 endif
