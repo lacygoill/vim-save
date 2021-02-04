@@ -70,7 +70,7 @@ def save#buffer() #{{{2
             sil lockm update
         # Vim(update):E45: 'readonly' option is set (add ! to override)
         catch /^Vim\%((\a\+)\)\=:E45:/
-            # let's ignore this entirely
+            # let's ignore this error
         catch
             echohl ErrorMsg
             echom v:exception
