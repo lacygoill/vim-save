@@ -54,11 +54,13 @@ def save#buffer() #{{{2
     # saved states,  you'll probably be  stuck in a  loop which includes  only 2
     # states, the last one and the last but one.
     #}}}
-    if tabpagebuflist()->mapnew((_, v) => bufname(v))->match('^undotree_\d\+') >= 0
+    if tabpagebuflist()
+        ->mapnew((_, v: number): string => bufname(v))
+        ->match('^undotree_\d\+') >= 0
         return
     endif
 
-    if &bt == '' && bufname('%') != ''
+    if &bt == '' && !&readonly && bufname('%') != ''
         # Don't replace this `try/catch` with `sil!`.{{{
         #
         # `sil!` can lead to weird issues.
@@ -68,8 +70,8 @@ def save#buffer() #{{{2
         #}}}
         try
             sil lockm update
-        # Vim(update):E45: 'readonly' option is set (add ! to override)
-        catch /^Vim\%((\a\+)\)\=:E45:/
+        # Vim(update):E505: "/path/to/file/owned/by/root" is read-only (add ! to override)
+        catch /^Vim\%((\a\+)\)\=:E505:/
             # let's ignore this error
         catch
             echohl ErrorMsg
