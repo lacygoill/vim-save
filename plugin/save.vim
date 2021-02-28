@@ -60,25 +60,31 @@ def save#buffer() #{{{2
         return
     endif
 
-    if &bt == '' && !&readonly && bufname('%') != ''
-        # Don't replace this `try/catch` with `sil!`.{{{
-        #
-        # `sil!` can lead to weird issues.
-        #
-        # For example, once  we had an issue where a  regular buffer was wrongly
-        # transformed into a qf  buffer: https://github.com/vim/vim/issues/7352
-        #}}}
-        try
-            sil lockm update
-        # Vim(update):E505: "/path/to/file/owned/by/root" is read-only (add ! to override)
-        catch /^Vim\%((\a\+)\)\=:E505:/
-            # let's ignore this error
-        catch
-            echohl ErrorMsg
-            echom v:exception
-            echohl NONE
-        endtry
+    # Don't try to use `expand('<abuf>')`.
+    # `:update` only works on the current buffer anyway.
+    if &readonly
+        || bufname('%') == ''
+        || &buftype != ''
+        return
     endif
+
+    # Don't replace this `try/catch` with `sil!`.{{{
+    #
+    # `sil!` can lead to weird issues.
+    #
+    # For  example, once  we had  an issue  where a  regular buffer  was wrongly
+    # transformed into a qf buffer: https://github.com/vim/vim/issues/7352
+    #}}}
+    try
+        sil lockm update
+    # Vim(update):E505: "/path/to/file/owned/by/root" is read-only (add ! to override)
+    catch /^Vim\%((\a\+)\)\=:E505:/
+        # let's ignore this error
+    catch
+        echohl ErrorMsg
+        echom v:exception
+        echohl NONE
+    endtry
 enddef
 
 def IsRecoveringSwapfile(): bool #{{{2
@@ -144,8 +150,11 @@ def save#toggleAuto(enable = false) #{{{2
     # We have a flag in the tab line; we want it to be updated immediately.
     redrawt
 enddef
+
 def AutoChecktime() #{{{2
-    if &bt != '' || bufname('%') == ''
+    var abuf: number = expand('<abuf>')->str2nr()
+    if bufname(abuf) == ''
+    || getbufvar(abuf, '&buftype', '') != ''
         return
     endif
     # What does it do?{{{
@@ -153,21 +162,16 @@ def AutoChecktime() #{{{2
     # Check whether  the current file has  been modified outside of  Vim.  If it
     # has, Vim will automatically re-read it because we've set 'autoread'.
     #
-    # A modification  does not necessarily  involve the CONTENTS  of the
-    # file.  Changing its PERMISSIONS is ALSO a modification.
+    # A modification  does not necessarily  involve the *contents* of  the file.
+    # Changing its *permissions* is *also* a modification.
     #}}}
-    #   Why %?{{{
+    #   Why `abuf`?{{{
     #
-    # The command is taken from blueyed's vimrc.
-    # I guess it  makes sense, because this function will  be called frequently,
-    # and if we have many buffers, without specifiying a buffer, Vim would check
-    # ALL buffers.  This could be too time-consuming.
+    # This function  will be  called frequently,  and if  we have  many buffers,
+    # without specifiying a  buffer, Vim would check *all*  buffers.  This could
+    # be too time-consuming.
     #}}}
-    #   Why `silent!`?{{{
-    #
-    # The filename could have changed outside Vim.
-    #}}}
-    sil! checktime %
+    exe ':' .. abuf .. 'checktime'
 enddef
 # }}}1
 # Mappings {{{1
