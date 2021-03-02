@@ -55,8 +55,8 @@ def save#buffer() #{{{2
     # states, the last one and the last but one.
     #}}}
     if tabpagebuflist()
-        ->mapnew((_, v: number): string => bufname(v))
-        ->match('^undotree_\d\+') >= 0
+     ->mapnew((_, v: number): string => bufname(v))
+     ->match('^undotree_\d\+') >= 0
         return
     endif
 
